@@ -28,6 +28,32 @@ var xMax = document.body.clientWidth;
 var Y_MIN = 130;
 var Y_MAX = 630;
 var DESCRIPTION = 'Типичное описание типичного объявления типичного вида';
+var LEFT_BUTTON_MOUSE = 0;
+
+var addressInput = document.querySelector('#address');
+
+var currentOffer = {
+    author: {
+        avatar: null,
+    },
+    offer: {
+        title: null,
+        address: null,
+        price: null,
+        type: null,
+        rooms: document.querySelector('#room_number').value,
+        guests: null,
+        checkin: null,
+        checkout: null,
+        features: null,
+        description: null,
+        photos: null,
+    },
+    location: {
+        x: 570 + 65 / 2,
+        y: 375 + 65 / 2
+    }
+};
 
 function getRandomNumber(min, max) {
     min = Math.ceil(min);
@@ -44,16 +70,15 @@ function getRandomArray(arr) {
     return newArray;
 }
 
-// вместо objectNumber лучше objectIndex, так будет понятнее
-function getRandomObject(objectNumber) {
+function getRandomObject(objectIndex) {
     var locationX = getRandomNumber(X_MIN, xMax);
     var locationY = getRandomNumber(Y_MIN, Y_MAX);
     return {
         author: {
-            avatar: 'img/avatars/user0' + (objectNumber + 1) + '.png'
+            avatar: 'img/avatars/user0' + (objectIndex + 1) + '.png'
         },
         offer: {
-            title: TITLES[objectNumber],
+            title: TITLES[objectIndex],
             address: locationX + ', ' + locationY,
             price: getRandomNumber(MIN_PRICE, MAX_PRICE),
             type: TYPES[getRandomNumber(0, TYPES.length)],
@@ -72,8 +97,6 @@ function getRandomObject(objectNumber) {
     };
 }
 
-// давай все же сделаем так, чтобы функция принимала аргументом число - длину массива
-// тем более, что ниже ты вызываешь эту функцию с аргументом, который здесь не использовался
 function getObjectsArray() {
     var offers = [];
     for (var i = 0; i < ADS_QUANTITY; i++) {
@@ -82,23 +105,13 @@ function getObjectsArray() {
     return offers;
 }
 
-// предлагаю назвать newOffers, потому что это массив
-var newOffer = getObjectsArray(ADS_QUANTITY);
-
-// эти переменные используются только в функции renderPin, поэтому лучше их перенести туда
-var pinTemplate = document.querySelector('#pin').content.querySelector('.map__pin');
-var pinListElement = document.querySelector('.map__pins');
-
 function renderPin(offers) {
-    // данный код будет вызываться каждый раз, когда будет отрисовываться булавка
-    // эта функция называется renderPin, но заодно делает карту активной, что уже лишнее
-    // лучше его перенести в getActiveForm, там она к месту, потому что это как раз один из шагов перевода карты в активный режим
-    document.querySelector('.map').classList.remove('map--faded');
-
+    var pinTemplate = document.querySelector('#pin').content.querySelector('.map__pin');
+    var pinListElement = document.querySelector('.map__pins');
     var fragment = document.createDocumentFragment();
 
     for (var i = 0; i < offers.length; i++) {
-        var pinElement = pinTemplate.(true);
+        var pinElement = pinTemplate.cloneNode(true);
         var offer = offers[i];
         pinElement.style.left = (offer.location.x - PIN_WIDTH / 2) + 'px';
         pinElement.style.top = (offer.location.y - PIN_HEIGHT) + 'px';
@@ -121,31 +134,39 @@ function disableForm() {
 
 function enableForm() {
     for (var i = 0; i < formFieldsets.length; i++) {
-        // removeAttribute ждет одного атрибута, второй лишний
-        formFieldsets[i].removeAttribute('disabled', '');
+        formFieldsets[i].removeAttribute('disabled');
     }
 }
 
-// эта функция не возвращает активную форму, лучше назвать activateForm
-function getActiveForm() {
-    renderPin(ADS_QUANTITY);
+var newOffers = getObjectsArray();
+function activateForm() {
+    renderPin(newOffers);
     enableForm();
     form.classList.remove('ad-form--disabled');
+    document.querySelector('.map').classList.remove('map--faded');
+    currentOffer.location.y = 375 + 65 + 22;
+    updateCurrentOfferLocation(currentOffer.location);
+    document.querySelector('#room_number').addEventListener('change', function (e) {
+        // обновить currentOffer на выбранное значение
+    });
+    // сделать то же самое для селектора количества гостей + должны сравнить количество гостей и комнат. Вызвать валидацию, если все плохо
 }
 
-// если querySelector ничего не нашел, то он вернет null, как в данном случае
-// лучше всего имена классов копировать, тогда вероятность опечатки уйдет
-var mapPinMain = document.querySelector('.map__pin—main');
+function updateCurrentOfferLocation(location) {
+    addressInput.value = location.x + ', ' + location.y;
+}
 
-disableForm();
-// константу надо вынести наверх
-var LEFT_BUTTON_MOUSE = 0;
-
-// а теперь интересный спецэффект: если нажать на этот элемент несколько раз, то будут добавляться новые булавки. Расскажу голосом, как лучше сделать
-mapPinMain.addEventListener('mousedown', function (evt) {
-        if (evt.button === LEFT_BUTTON_MOUSE) {
-            getActiveForm();
+function init() {
+    disableForm();
+    updateCurrentOfferLocation(currentOffer.location);
+    var mapPinMain = document.querySelector('.map__pin--main');
+    mapPinMain.addEventListener('click', function activateEventHandler(evt) {
+            if (evt.button === LEFT_BUTTON_MOUSE) {
+                activateForm();
+                mapPinMain.removeEventListener('click', activateEventHandler);
+            }
         }
-    }
-);
-renderPin(newOffer);
+    );
+}
+
+init();
