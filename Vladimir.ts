@@ -1,23 +1,7 @@
 'use strict';
 
-// здесь и далее коменты идут либо над строкой, к которой относятся, либо сбоку от нее
-
 var ADS_QUANTITY = 8;
-// 1) константы даже в виде массивов надо писать SNAKE_UPPER_CASE
-// 2) на будущее: любой комент, который я оставляю для какой-то части кода должен автоматически распространяться на весь код
-// то есть в данном случае, если я оставил комент, что массив надо писать капсом, то это значит, что все массивы-константы должны быть так написаны
-// потому что на работе в ревью это очень важно: тебе указали на какую-то неточность или ошибку, то ты исправляешь не только ее, но и смотришь, чтобы больше в коде она не повторялась
-// ну и в будущем следишь, чтобы ее не повторять :) это покажет тебя с очень хорошей стороны
-var avatars = [
-    'img/avatars/user01.png',
-    'img/avatars/user02.png',
-    'img/avatars/user03.png',
-    'img/avatars/user04.png',
-    'img/avatars/user05.png',
-    'img/avatars/user06.png',
-    'img/avatars/user07.png',
-    'img/avatars/user08.png'];
-var titles = [
+var TITLES = [
     'Замечательная квартира',
     'Лучшее предложение',
     'Успевайте бронировать',
@@ -26,28 +10,26 @@ var titles = [
     'У Андрея :D',
     'Якудза',
     'Отель ХАРАКИРИ'];
-var MIN_PRICE = 10000; // минимум тут больше максимума о_О
-var MAX_PRICE = 1500;
-var types = ['palace', 'flat', 'house', 'bungalo'];
-var rooms = [1, 2, 3, 4];
-var guests = [1, 2, 3, 4, 5];
-var times = ['12:00', '13:00', '14:00'];
-var features = ['wifi', 'dishwasher', 'parking', 'washer', 'elevator', 'conditioner'];
-var photos = [
+var MIN_PRICE = 1500;
+var MAX_PRICE = 10000;
+var TYPES = ['palace', 'flat', 'house', 'bungalo'];
+var MAX_ROOMS = 4;
+var MAX_GUESTS = 5;
+var TIMES = ['12:00', '13:00', '14:00'];
+var FEATURES = ['wifi', 'dishwasher', 'parking', 'washer', 'elevator', 'conditioner'];
+var PHOTOS = [
     'http://o0.github.io/assets/images/tokyo/hotel1.jpg',
     'http://o0.github.io/assets/images/tokyo/hotel2.jpg',
     'http://o0.github.io/assets/images/tokyo/hotel3.jpg'];
 var PIN_WIDTH = 50;
 var PIN_HEIGHT = 70;
 var X_MIN = 0;
-var X_MAX = document.body.clientWidth;
+var xMax = document.body.clientWidth;
 var Y_MIN = 130;
 var Y_MAX = 630;
 var DESCRIPTION = 'Типичное описание типичного объявления типичного вида';
 
-// название немного вводит в заблуждение. На самом деле функция возвращает не какой-то случайный элемент, а случайное целое число
-function getRandomItem(min, max) {
-    // мне кажется, что округления пока избыточны, хотя это и добавляет больше гибкости в обработке прилетевших аргументов
+function getRandomNumber(min, max) {
     min = Math.ceil(min);
     max = Math.floor(max);
     return Math.floor(Math.random() * (max - min)) + min;
@@ -55,79 +37,115 @@ function getRandomItem(min, max) {
 
 function getRandomArray(arr) {
     var newArray = [];
-    // заметь, что getRandomItem принимает максимальное значение, но возвращает всегда число меньше максимума.
-    // Потому что Math.random() "возвращает псевдослучайное число с плавающей запятой из диапазона [0, 1), то есть, от 0 (включительно) до 1 (но не включая 1)"\
-    // поэтому длина нового массива в максимуме всегда будет на 1 меньше, чем заданный массив
-    var newArrayLength = getRandomItem(1, arr.length);
+    var newArrayLength = getRandomNumber(1, arr.length + 1);
     for (var i = 0; i < newArrayLength; i++) {
-        // заметь, что мы сохраняем порядок элементов в массиве. Было бы отлично вернуть потом массив со случайным порядком, но не повторяющихся элементов
-        // по-сути, та же задача, что и в функции getRandomObject, в части avatar
         newArray.push(arr[i]);
     }
     return newArray;
 }
 
-var getRandomObject = function () {
+// вместо objectNumber лучше objectIndex, так будет понятнее
+function getRandomObject(objectNumber) {
+    var locationX = getRandomNumber(X_MIN, xMax);
+    var locationY = getRandomNumber(Y_MIN, Y_MAX);
     return {
         author: {
-            // в условиях сказано, что адреса не должны повторяться, а getRandomItem спокойно может выдать в худшем случае одинаковые числа
-            // можешь подумать, как сделать так, чтобы возвращались только уникальные числа :)
-            avatar: avatars[getRandomItem(0, avatars.length)]
+            avatar: 'img/avatars/user0' + (objectNumber + 1) + '.png'
         },
         offer: {
-            title: titles[getRandomItem(0, titles.length)],
-            address: '600, 350',
-            price: getRandomItem(MIN_PRICE, MAX_PRICE),
-            type: types[getRandomItem(0, types.length)],
-            rooms: rooms[getRandomItem(0, rooms.length)], // избыточно делать массив и дергать его случайный элемент, можно просто вернуть случайное число в заданном диапазоне
-            guests: guests[getRandomItem(0, guests.length)], // избыточно делать массив и дергать его случайный элемент, можно просто вернуть случайное число в заданном диапазоне
-            checkin: times[getRandomItem(0, times.length)],
-            checkout: times[getRandomItem(0, times.length)],
-            features: getRandomArray(features),
-            // пока строка одна на всех, потом можно будет сделать так же, как и с полем avatar выше
+            title: TITLES[objectNumber],
+            address: locationX + ', ' + locationY,
+            price: getRandomNumber(MIN_PRICE, MAX_PRICE),
+            type: TYPES[getRandomNumber(0, TYPES.length)],
+            rooms: getRandomNumber(0, MAX_ROOMS),
+            guests: getRandomNumber(0, MAX_GUESTS),
+            checkin: TIMES[getRandomNumber(0, TIMES.length)],
+            checkout: TIMES[getRandomNumber(0, TIMES.length)],
+            features: getRandomArray(FEATURES),
             description: DESCRIPTION,
-            photos: getRandomArray(photos)
+            photos: getRandomArray(PHOTOS)
         },
         location: {
-            x: getRandomItem(X_MIN + PIN_WIDTH, X_MAX - PIN_WIDTH),
-            y: getRandomItem(Y_MIN + PIN_HEIGHT, Y_MAX - PIN_HEIGHT)
+            x: locationX,
+            y: locationY
         }
     };
-};
+}
 
-var getObjectsArray = function () {
+// давай все же сделаем так, чтобы функция принимала аргументом число - длину массива
+// тем более, что ниже ты вызываешь эту функцию с аргументом, который здесь не использовался
+function getObjectsArray() {
     var offers = [];
     for (var i = 0; i < ADS_QUANTITY; i++) {
-        // отлично :)
-        offers.push(getRandomObject());
+        offers.push(getRandomObject(i));
     }
     return offers;
-};
+}
 
-// тут аргумент уходит в функцию, но сама функция аргументы не ждет
-// потом, тут ты возвращаешь результат выполнения функции, но он просто пропадает, потому что не записывается в переменную
-getObjectsArray(ADS_QUANTITY);
+// предлагаю назвать newOffers, потому что это массив
+var newOffer = getObjectsArray(ADS_QUANTITY);
 
-document.querySelector('.map').classList.remove('map--faded');
+// эти переменные используются только в функции renderPin, поэтому лучше их перенести туда
 var pinTemplate = document.querySelector('#pin').content.querySelector('.map__pin');
 var pinListElement = document.querySelector('.map__pins');
 
-var renderPin = function (offers) {
+function renderPin(offers) {
+    // данный код будет вызываться каждый раз, когда будет отрисовываться булавка
+    // эта функция называется renderPin, но заодно делает карту активной, что уже лишнее
+    // лучше его перенести в getActiveForm, там она к месту, потому что это как раз один из шагов перевода карты в активный режим
+    document.querySelector('.map').classList.remove('map--faded');
+
     var fragment = document.createDocumentFragment();
 
-    // тут ты пытаешься взять длину от функции, а не от массива, который должен прилететь в качестве аргумента в функции
-    for (var i = 0; i < getObjectsArray.length; i++) {
-        var pinElement = pinTemplate.cloneNode(true);
-
-        pinElement.style.left = offers[i].location.x + 'px';
-        pinElement.style.top = offers[i].location.y + 'px';
-        pinElement.querySelector('img').src = offers[i].author.avatar;
-        pinElement.querySelector('img').alt = offers[i].offer.title;
+    for (var i = 0; i < offers.length; i++) {
+        var pinElement = pinTemplate.(true);
+        var offer = offers[i];
+        pinElement.style.left = (offer.location.x - PIN_WIDTH / 2) + 'px';
+        pinElement.style.top = (offer.location.y - PIN_HEIGHT) + 'px';
+        pinElement.querySelector('img').src = offer.author.avatar;
+        pinElement.querySelector('img').alt = offer.offer.title;
 
         fragment.appendChild(pinElement);
     }
     pinListElement.appendChild(fragment);
-};
+}
 
-// ты в функцию передаешь другую функцию
-renderPin(getObjectsArray);
+var form = document.querySelector('.ad-form');
+var formFieldsets = form.querySelectorAll('fieldset');
+
+function disableForm() {
+    for (var i = 0; i < formFieldsets.length; i++) {
+        formFieldsets[i].setAttribute('disabled', '');
+    }
+}
+
+function enableForm() {
+    for (var i = 0; i < formFieldsets.length; i++) {
+        // removeAttribute ждет одного атрибута, второй лишний
+        formFieldsets[i].removeAttribute('disabled', '');
+    }
+}
+
+// эта функция не возвращает активную форму, лучше назвать activateForm
+function getActiveForm() {
+    renderPin(ADS_QUANTITY);
+    enableForm();
+    form.classList.remove('ad-form--disabled');
+}
+
+// если querySelector ничего не нашел, то он вернет null, как в данном случае
+// лучше всего имена классов копировать, тогда вероятность опечатки уйдет
+var mapPinMain = document.querySelector('.map__pin—main');
+
+disableForm();
+// константу надо вынести наверх
+var LEFT_BUTTON_MOUSE = 0;
+
+// а теперь интересный спецэффект: если нажать на этот элемент несколько раз, то будут добавляться новые булавки. Расскажу голосом, как лучше сделать
+mapPinMain.addEventListener('mousedown', function (evt) {
+        if (evt.button === LEFT_BUTTON_MOUSE) {
+            getActiveForm();
+        }
+    }
+);
+renderPin(newOffer);
